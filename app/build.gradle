@@ -1,0 +1,80 @@
+import dependencies.Dep
+import dependencies.Environment
+
+apply plugin: "com.google.cloud.tools.appengine"
+apply plugin: "war"
+
+sourceCompatibility = "11"
+targetCompatibility = "11"
+
+task copyDomaResources(type: Sync) {
+    from sourceSets.main.resources.srcDirs
+    into compileJava.destinationDir
+    include "doma.compile.config"
+    include "META-INF/**/*.sql"
+    include "META-INF/**/*.script"
+}
+
+compileJava {
+    dependsOn copyDomaResources
+    options.encoding = "UTF-8"
+    options.annotationProcessorPath = configurations.annotationProcessor
+}
+
+
+dependencies {
+    compileOnly Dep.Lombok.core
+    annotationProcessor Dep.Lombok.compiler
+
+    implementation Dep.Database.Doma.core
+    annotationProcessor Dep.Database.Doma.compiler
+    implementation Dep.Database.hikariCp
+    implementation Dep.Database.mysql
+
+    implementation Dep.Gson.core
+    implementation Dep.Guice.core
+    implementation Dep.Guice.servlet
+
+    implementation Dep.GCP.pubsub
+
+    compileOnly Dep.Servlet.api
+
+    providedCompile Dep.Jetty.server
+    providedCompile Dep.Jetty.webapp
+    providedCompile Dep.Jetty.util
+    providedCompile Dep.Jetty.annotations
+}
+
+appengine {
+    deploy {
+        projectId = "GCLOUD_CONFIG"
+        version = "GCLOUD_CONFIG"
+        promote = true
+    }
+}
+
+war {
+
+    archivesBaseName = "app"
+
+    from {
+        configurations.providedCompile.collect {
+            it.isDirectory() ? it : project.zipTree(it)
+        }
+    }
+    // 同じモジュールにMainを持ちたい場合はMainを直下に展開する
+    from fileTree(dir: 'build/classes/java/main', include: '**/Main.class')
+
+    manifest.attributes('Main-Class': 'dev.fumin.sample.eventdriven.Main')
+}
+
+task runApp() {
+    dependsOn war
+    doLast {
+        javaexec {
+            environment("GOOGLE_CLOUD_PROJECT", Environment.googleCloudProject)
+            main = "-jar"
+            args(buildDir.path + "/libs/app.war")
+        }
+    }
+}

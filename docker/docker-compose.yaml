@@ -1,0 +1,14 @@
+eventdriven-db:
+  build: .
+  container_name: event_driven_mysql
+  dockerfile: Dockerfile-MySQL
+  environment:
+    MYSQL_ROOT_PASSWORD: root
+    MYSQL_USER: myuser
+    MYSQL_PASSWORD: mypassword
+    MYSQL_DATABASE: eventdriven_db
+    TZ: "Asia/Tokyo"
+  ports:
+    - 3306:3306
+  volumes:
+    - ./initdb.d:/docker-entrypoint-initdb.d

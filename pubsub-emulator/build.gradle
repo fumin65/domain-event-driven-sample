@@ -1,0 +1,17 @@
+import dependencies.Dep
+import dependencies.Environment
+
+apply plugin: "java"
+apply plugin: "application"
+
+sourceCompatibility = 1.8
+
+dependencies {
+    implementation Dep.GCP.pubsub
+}
+
+run {
+    environment("GOOGLE_CLOUD_PROJECT", Environment.googleCloudProject)
+}
+
+mainClassName = "dev.fumin.sample.pubsub.emulator.EmulatorInitializer"

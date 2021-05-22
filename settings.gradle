@@ -1,0 +1,4 @@
+rootProject.name = 'domain-event-driven'
+include 'app'
+include 'pubsub-emulator'
+
